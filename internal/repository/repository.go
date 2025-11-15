@@ -6,7 +6,7 @@ import (
 )
 
 type TeamRepository interface {
-	Create(ctx context.Context, team domain.Team) (domain.Team, error)
+	Create(ctx context.Context, team domain.Team) error
 	TeamByName(ctx context.Context, teamName domain.TeamName) (domain.Team, error)
 }
 
