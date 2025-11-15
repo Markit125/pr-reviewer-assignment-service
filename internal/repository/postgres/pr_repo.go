@@ -119,14 +119,14 @@ func (prr *PullRequestRepo) MergeByID(ctx context.Context, pullRequestID domain.
 	return pullRequest, err
 }
 
-func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID domain.PullRequestID, oldUserID domain.UserID, newUserID domain.UserID) (domain.PullRequest, error) {
+func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID domain.PullRequestID, oldUserID domain.UserID, newUserID domain.UserID) (domain.PullRequest, domain.UserID, error) {
 	if oldUserID == newUserID {
-		return domain.PullRequest{}, fmt.Errorf("trying to change reviewer on the same reviewer with id: %s", newUserID)
+		return domain.PullRequest{}, domain.UserID(""), fmt.Errorf("trying to change reviewer on the same reviewer with id: %s", newUserID)
 	}
 
 	tx, err := prr.db.Begin(ctx)
 	if err != nil {
-		return domain.PullRequest{}, err
+		return domain.PullRequest{}, domain.UserID(""), err
 	}
 	defer tx.Rollback(ctx)
 
@@ -139,9 +139,9 @@ func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID 
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return domain.PullRequest{}, domain.ErrPRExists
+			return domain.PullRequest{}, domain.UserID(""), domain.ErrPRExists
 		}
-		return domain.PullRequest{}, err
+		return domain.PullRequest{}, domain.UserID(""), err
 	}
 
 	if tag.RowsAffected() == 0 {
@@ -149,29 +149,29 @@ func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID 
 
 		prExistsErr := tx.QueryRow(ctx, "SELECT TRUE FROM pull_requests WHERE pull_request_id = $1", pullRequestID).Scan(&prExists)
 		if prExistsErr != nil && !errors.Is(prExistsErr, pgx.ErrNoRows) {
-			return domain.PullRequest{}, prExistsErr
+			return domain.PullRequest{}, domain.UserID(""), prExistsErr
 		}
 		if !prExists {
-			return domain.PullRequest{}, domain.ErrNotFound
+			return domain.PullRequest{}, domain.UserID(""), domain.ErrNotFound
 		}
 
 		userAssignedErr := tx.QueryRow(ctx, "SELECT TRUE FROM pull_request_reviewers WHERE pull_request_id = $1 AND user_id = $2", pullRequestID, oldUserID).Scan(&userAssigned)
 		if userAssignedErr != nil && !errors.Is(userAssignedErr, pgx.ErrNoRows) {
-			return domain.PullRequest{}, userAssignedErr
+			return domain.PullRequest{}, domain.UserID(""), userAssignedErr
 		}
 		if !userAssigned {
-			return domain.PullRequest{}, domain.ErrNotAssigned
+			return domain.PullRequest{}, domain.UserID(""), domain.ErrNotAssigned
 		}
 
-		return domain.PullRequest{}, errors.New("reassignment failed for an unknown reason")
+		return domain.PullRequest{}, domain.UserID(""), errors.New("reassignment failed for an unknown reason")
 	}
 
 	pr, err := prr.pullRequestByID(ctx, tx, pullRequestID)
 	if err != nil {
-		return domain.PullRequest{}, err
+		return domain.PullRequest{}, domain.UserID(""), err
 	}
 
-	return pr, tx.Commit(ctx)
+	return pr, newUserID, tx.Commit(ctx)
 }
 
 func (prr *PullRequestRepo) PullRequestsByReviewer(ctx context.Context, userID domain.UserID) ([]domain.PullRequestShort, error) {
