@@ -12,8 +12,8 @@ const (
 )
 
 type PullRequest struct {
-	PullRequestID     PullRequestID
-	PullRequestName   string
+	ID                PullRequestID
+	Name   string
 	AuthorID          UserID
 	Status            PRStatus
 	AssignedReviewers []UserID
@@ -22,8 +22,8 @@ type PullRequest struct {
 }
 
 type PullRequestShort struct {
-	PullRequestID   PullRequestID
-	PullRequestName string
+	ID              PullRequestID
+	Name string
 	AuthorID        UserID
 	Status          PRStatus
 }

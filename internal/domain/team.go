@@ -1,8 +1,8 @@
 package domain
 
 type Team struct {
-	TeamName TeamName
-	Members  []TeamMember
+	Name    TeamName
+	Members []TeamMember
 }
 
 type TeamMember struct {

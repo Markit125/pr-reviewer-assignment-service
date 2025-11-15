@@ -4,14 +4,11 @@ import (
 	"context"
 	"errors"
 	"pr-reviewer-service/internal/domain"
-	"pr-reviewer-service/internal/repository"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-var _ repository.TeamRepository = NewTeamRepo(nil)
 
 type TeamRepo struct {
 	db *pgxpool.Pool
@@ -31,7 +28,7 @@ func (tr *TeamRepo) Create(ctx context.Context, team domain.Team) error {
 	defer tx.Rollback(ctx)
 
 	createTeamQuery := `INSERT INTO teams (team_name) VALUES ($1)`
-	if _, err := tx.Exec(ctx, createTeamQuery, team.TeamName); err != nil {
+	if _, err := tx.Exec(ctx, createTeamQuery, team.Name); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return domain.ErrTeamExists
@@ -52,7 +49,7 @@ func (tr *TeamRepo) Create(ctx context.Context, team domain.Team) error {
 
 	batch := &pgx.Batch{}
 	for _, member := range team.Members {
-		batch.Queue(createUserQuery, member.UserID, member.Username, team.TeamName, member.IsActive)
+		batch.Queue(createUserQuery, member.UserID, member.Username, team.Name, member.IsActive)
 	}
 
 	batchRes := tx.SendBatch(ctx, batch)
@@ -93,8 +90,8 @@ func (tr *TeamRepo) TeamByName(ctx context.Context, teamName domain.TeamName) (d
 			return domain.Team{}, err
 		}
 
-		if team.TeamName == "" {
-			team.TeamName = tn
+		if team.Name == "" {
+			team.Name = tn
 		}
 
 		if uid != "" {
@@ -109,7 +106,7 @@ func (tr *TeamRepo) TeamByName(ctx context.Context, teamName domain.TeamName) (d
 		return domain.Team{}, err
 	}
 
-	if team.TeamName == "" {
+	if team.Name == "" {
 		return domain.Team{}, domain.ErrNotFound
 	}
 
