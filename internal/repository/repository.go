@@ -21,6 +21,6 @@ type PullRequestRepository interface {
 	Create(ctx context.Context, pullRequest domain.PullRequest) (domain.PullRequest, error)
 	PullRequestByID(ctx context.Context, pullRequestID domain.PullRequestID) (domain.PullRequest, error)
 	MergeByID(ctx context.Context, pullRequestID domain.PullRequestID) (domain.PullRequest, error)
-	ReassignReviewer(ctx context.Context, pullRequestID domain.PullRequestID, oldUserID domain.UserID) (domain.PullRequest, error)
+	ReassignReviewer(ctx context.Context, pullRequestID domain.PullRequestID, oldUserID domain.UserID, newUserID domain.UserID) (domain.PullRequest, error)
 	PullRequestsByReviewer(ctx context.Context, userID domain.UserID) ([]domain.PullRequestShort, error)
 }
