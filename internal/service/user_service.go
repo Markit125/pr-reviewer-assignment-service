@@ -17,7 +17,7 @@ type UserReviewAssignments struct {
 	PullRequests []domain.PullRequestShort
 }
 
-func NewUserService(ctx context.Context, ur repository.UserRepository, prr repository.PullRequestRepository) *UserService {
+func NewUserService(ur repository.UserRepository, prr repository.PullRequestRepository) *UserService {
 	return &UserService{
 		userRepo: ur,
 		prRepo:   prr,

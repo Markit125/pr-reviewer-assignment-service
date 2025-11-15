@@ -14,7 +14,7 @@ type PullRequestService struct {
 	randomizer *rand.Rand
 }
 
-func NewPullRequestService(ctx context.Context, prr repository.PullRequestRepository, ur repository.UserRepository) *PullRequestService {
+func NewPullRequestService(prr repository.PullRequestRepository, ur repository.UserRepository) *PullRequestService {
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return &PullRequestService{
 		prRepo:     prr,
