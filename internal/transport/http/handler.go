@@ -28,7 +28,7 @@ type Handler struct {
 	logger      *slog.Logger
 }
 
-func NewHandeler(ts *service.TeamService, us *service.UserService, prs *service.PullRequestService, logger *slog.Logger) *Handler {
+func NewHandler(ts *service.TeamService, us *service.UserService, prs *service.PullRequestService, logger *slog.Logger) *Handler {
 	return &Handler{
 		teamService: ts,
 		userService: us,
