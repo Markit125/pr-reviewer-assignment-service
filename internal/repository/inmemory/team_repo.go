@@ -35,22 +35,23 @@ func (tr *TeamRepo) Create(_ context.Context, team domain.Team) error {
 }
 
 func (tr *TeamRepo) TeamByName(ctx context.Context, teamName domain.TeamName) (domain.Team, error) {
-	if team, exists := tr.db.Teams[teamName]; exists {
-		members := []domain.TeamMember{}
-		for _, member := range tr.db.Users {
-			if member.TeamName == teamName {
-				members = append(members, domain.TeamMember{
-					UserID:   member.ID,
-					Username: member.Username,
-					IsActive: member.IsActive,
-				})
-			}
-		}
-
-		team.Members = members
-
-		return team, nil
+	team, exists := tr.db.Teams[teamName]
+	if !exists {
+		return domain.Team{}, domain.ErrNotFound
 	}
 
-	return domain.Team{}, domain.ErrNotFound
+	members := []domain.TeamMember{}
+	for _, member := range tr.db.Users {
+		if member.TeamName == teamName {
+			members = append(members, domain.TeamMember{
+				UserID:   member.ID,
+				Username: member.Username,
+				IsActive: member.IsActive,
+			})
+		}
+	}
+
+	team.Members = members
+
+	return team, nil
 }
