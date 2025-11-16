@@ -98,14 +98,14 @@ func TestCreateTeamUpdatedUsers(t *testing.T) {
 	err := e.teamService.CreateTeam(e.ctx, frontendTeam)
 	require.NoError(t, err)
 
-	userFirst, _ := e.storage.Users[firstUserID]
+	userFirst := e.storage.Users[firstUserID]
 	require.Equal(t, domain.TeamName("frontend"), userFirst.TeamName)
 	require.False(t, userFirst.IsActive)
 
 	err = e.teamService.CreateTeam(e.ctx, teamPlatform)
 	require.NoError(t, err)
 
-	userFirstUpdated, _ := e.storage.Users[firstUserID]
+	userFirstUpdated := e.storage.Users[firstUserID]
 	assert.Equal(t, teamPlatformName, userFirstUpdated.TeamName)
 	assert.Equal(t, "First", userFirstUpdated.Username)
 	assert.True(t, userFirstUpdated.IsActive)

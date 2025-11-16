@@ -100,7 +100,7 @@ func TestSetUserActivityDeactivatesUser(t *testing.T) {
 	assert.False(t, updatedUser.IsActive)
 	assert.Equal(t, userID1, updatedUser.ID)
 
-	dbUser, _ := e.storage.Users[userID1]
+	dbUser := e.storage.Users[userID1]
 	assert.False(t, dbUser.IsActive)
 }
 
@@ -117,7 +117,7 @@ func TestSetUserActivityActivatesUser(t *testing.T) {
 	assert.True(t, updatedUser.IsActive)
 	assert.Equal(t, userID1, updatedUser.ID)
 
-	dbUser, _ := e.storage.Users[userID1]
+	dbUser := e.storage.Users[userID1]
 	assert.True(t, dbUser.IsActive)
 }
 
