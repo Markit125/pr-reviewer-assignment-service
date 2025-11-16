@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type testEnviroment struct {
+type testPREnviroment struct {
 	ctx     context.Context
 	storage *inmemory.InMemoryStorage
 
@@ -25,7 +25,7 @@ type testEnviroment struct {
 	teamService *service.TeamService
 }
 
-func setup() testEnviroment {
+func setup() testPREnviroment {
 	storage, _ := inmemory.NewStorage()
 
 	userRepo := inmemory.NewUserRepo(storage)
@@ -35,7 +35,7 @@ func setup() testEnviroment {
 	teamService := service.NewTeamService(teamRepo, userRepo)
 	prService := service.NewPullRequestService(prRepo, userRepo)
 
-	return testEnviroment{
+	return testPREnviroment{
 		ctx:         context.Background(),
 		storage:     storage,
 		userRepo:    userRepo,
@@ -120,12 +120,12 @@ func TestFailOnAuthorNotFound(t *testing.T) {
 	t.Parallel()
 	h := setup()
 
-	_, err := h.prService.CreatePR(h.ctx, "pr-1", "Test PR", "non-existing-author")
+	_, err := h.prService.CreatePR(h.ctx, "pr-1", "Test PR", "non-existent-author")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, domain.ErrNotFound)
 }
 
-func setupReassignTest(t *testing.T) (testEnviroment, domain.PullRequest) {
+func setupReassignTest(t *testing.T) (testPREnviroment, domain.PullRequest) {
 	h := setup()
 	err := h.teamService.CreateTeam(h.ctx, testTeam)
 	require.NoError(t, err)
