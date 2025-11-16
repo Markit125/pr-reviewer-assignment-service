@@ -150,7 +150,7 @@ func TestReassignToOneAvailableCandidate(t *testing.T) {
 	assert.Len(t, updatedPR.AssignedReviewers, 1)
 	assert.Equal(t, secondReviewerID, updatedPR.AssignedReviewers[0])
 
-	dbPR, _ := e.storage.PRs[pr.ID]
+	dbPR := e.storage.PRs[pr.ID]
 	assert.Equal(t, secondReviewerID, dbPR.AssignedReviewers[0])
 }
 
@@ -209,7 +209,7 @@ func TestSuccessMergePR(t *testing.T) {
 	assert.Equal(t, domain.StatusMerged, mergedPR.Status)
 	assert.NotNil(t, mergedPR.MergedAt)
 
-	dbPR, _ := e.storage.PRs["pr-1"]
+	dbPR := e.storage.PRs["pr-1"]
 	assert.Equal(t, domain.StatusMerged, dbPR.Status)
 }
 

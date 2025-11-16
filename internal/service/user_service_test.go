@@ -129,7 +129,7 @@ func TestSetUserActivityFailsOnNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, domain.ErrNotFound)
 }
 
-func setupReviewTest(t *testing.T) testUserEnviroment {
+func setupReviewTest() testUserEnviroment {
 	e := setupUserTest()
 	e.storage.Users[userID1] = testUser1
 	e.storage.Users[userID2] = testUser2
@@ -140,7 +140,7 @@ func setupReviewTest(t *testing.T) testUserEnviroment {
 }
 
 func TestReviewAssignmentsSuccess(t *testing.T) {
-	e := setupReviewTest(t)
+	e := setupReviewTest()
 
 	assignments, err := e.userService.ReviewAssignments(e.ctx, userID1)
 
@@ -169,7 +169,7 @@ func TestGetReviewAssignmentsZeroPRs(t *testing.T) {
 }
 
 func TestGetReviewAssignmentsFailsOnNotFound(t *testing.T) {
-	e := setupReviewTest(t)
+	e := setupReviewTest()
 
 	_, err := e.userService.ReviewAssignments(e.ctx, "u-ghost")
 	require.Error(t, err)
