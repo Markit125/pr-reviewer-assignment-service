@@ -25,8 +25,8 @@ func (ur *UserRepo) Create(ctx context.Context, user domain.User) error {
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (user_id) DO UPDATE
 		SET
-			username = EXCLUDED.username
-			team_name = EXCLUDED.team_name
+			username = EXCLUDED.username,
+			team_name = EXCLUDED.team_name,
 			is_active = EXCLUDED.is_active
 	`
 
@@ -45,6 +45,9 @@ func (ur *UserRepo) UserByID(ctx context.Context, userID domain.UserID) (domain.
 	err := ur.db.QueryRow(ctx, userByIDQuery, userID).
 		Scan(&user.ID, &user.Username, &user.TeamName, &user.IsActive)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.User{}, domain.ErrNotFound
+		}
 		return domain.User{}, err
 	}
 

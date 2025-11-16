@@ -61,13 +61,13 @@ func (h *Handler) respondError(w http.ResponseWriter, r *http.Request, err error
 	} else if errors.Is(err, domain.ErrPRExists) {
 		status = http.StatusConflict
 		apiErr = APIError{Code: "PR_EXISTS", Message: err.Error()}
-	} else if errors.Is(err, domain.ErrTeamExists) {
+	} else if errors.Is(err, domain.ErrPRMerged) {
 		status = http.StatusConflict
 		apiErr = APIError{Code: "PR_MERGED", Message: err.Error()}
-	} else if errors.Is(err, domain.ErrTeamExists) {
+	} else if errors.Is(err, domain.ErrNotAssigned) {
 		status = http.StatusConflict
 		apiErr = APIError{Code: "NOT_ASSIGNED", Message: err.Error()}
-	} else if errors.Is(err, domain.ErrTeamExists) {
+	} else if errors.Is(err, domain.ErrNoCandidate) {
 		status = http.StatusConflict
 		apiErr = APIError{Code: "NO_CANDIDATE", Message: err.Error()}
 	}

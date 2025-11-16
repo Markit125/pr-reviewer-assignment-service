@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"fmt"
 	"pr-reviewer-service/internal/domain"
 	"time"
 
@@ -60,7 +59,7 @@ func (prr *PullRequestRepo) Create(ctx context.Context, pr domain.PullRequest) (
 			batch.Queue(insertReviewersQuery, pr.ID, reviewerID)
 		}
 
-		batchRes := prr.db.SendBatch(ctx, batch)
+		batchRes := tx.SendBatch(ctx, batch)
 		if err := batchRes.Close(); err != nil {
 			return domain.PullRequest{}, err
 		}
@@ -87,28 +86,14 @@ func (prr *PullRequestRepo) MergeByID(ctx context.Context, pullRequestID domain.
 	mergeQuery := `
 		UPDATE pull_requests
 		SET
-			status = 'MERGED'
+			status = 'MERGED',
 			merged_at = COALESCE(merged_at, NOW())
 		WHERE pull_request_id = $1
 	`
 
-	tag, err := tx.Exec(ctx, mergeQuery, pullRequestID)
+	_, err = tx.Exec(ctx, mergeQuery, pullRequestID)
 	if err != nil {
 		return domain.PullRequest{}, err
-	}
-
-	if tag.RowsAffected() == 0 {
-		exists := false
-
-		isPullRequestExistQuery := `SELECT TRUE FROM pull_requests WHERE pull_request_id = $1`
-		err := tx.QueryRow(ctx, isPullRequestExistQuery, pullRequestID).Scan(&exists)
-		if err != nil && errors.Is(err, pgx.ErrNoRows) {
-			return domain.PullRequest{}, err
-		}
-
-		if !exists {
-			return domain.PullRequest{}, domain.ErrNotFound
-		}
 	}
 
 	pullRequest, err := prr.pullRequestByID(ctx, tx, pullRequestID)
@@ -116,12 +101,16 @@ func (prr *PullRequestRepo) MergeByID(ctx context.Context, pullRequestID domain.
 		return domain.PullRequest{}, err
 	}
 
-	return pullRequest, err
+	if err := tx.Commit(ctx); err != nil {
+		return domain.PullRequest{}, err
+	}
+
+	return pullRequest, nil
 }
 
 func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID domain.PullRequestID, oldUserID domain.UserID, newUserID domain.UserID) (domain.PullRequest, domain.UserID, error) {
 	if oldUserID == newUserID {
-		return domain.PullRequest{}, domain.UserID(""), fmt.Errorf("trying to change reviewer on the same reviewer with id: %s", newUserID)
+		return domain.PullRequest{}, domain.UserID(""), domain.ErrNoCandidate
 	}
 
 	tx, err := prr.db.Begin(ctx)
@@ -145,25 +134,17 @@ func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID 
 	}
 
 	if tag.RowsAffected() == 0 {
-		var prExists, userAssigned bool
+		var prExists bool
 
-		prExistsErr := tx.QueryRow(ctx, "SELECT TRUE FROM pull_requests WHERE pull_request_id = $1", pullRequestID).Scan(&prExists)
-		if prExistsErr != nil && !errors.Is(prExistsErr, pgx.ErrNoRows) {
-			return domain.PullRequest{}, domain.UserID(""), prExistsErr
-		}
-		if !prExists {
-			return domain.PullRequest{}, domain.UserID(""), domain.ErrNotFound
-		}
-
-		userAssignedErr := tx.QueryRow(ctx, "SELECT TRUE FROM pull_request_reviewers WHERE pull_request_id = $1 AND user_id = $2", pullRequestID, oldUserID).Scan(&userAssigned)
-		if userAssignedErr != nil && !errors.Is(userAssignedErr, pgx.ErrNoRows) {
-			return domain.PullRequest{}, domain.UserID(""), userAssignedErr
-		}
-		if !userAssigned {
-			return domain.PullRequest{}, domain.UserID(""), domain.ErrNotAssigned
+		err := tx.QueryRow(ctx, "SELECT TRUE FROM pull_requests WHERE pull_request_id = $1", pullRequestID).Scan(&prExists)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.PullRequest{}, domain.UserID(""), domain.ErrNotFound
+			}
+			return domain.PullRequest{}, domain.UserID(""), err
 		}
 
-		return domain.PullRequest{}, domain.UserID(""), errors.New("reassignment failed for an unknown reason")
+		return domain.PullRequest{}, domain.UserID(""), domain.ErrNotAssigned
 	}
 
 	pr, err := prr.pullRequestByID(ctx, tx, pullRequestID)
@@ -171,7 +152,11 @@ func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID 
 		return domain.PullRequest{}, domain.UserID(""), err
 	}
 
-	return pr, newUserID, tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return domain.PullRequest{}, domain.UserID(""), err
+	}
+
+	return pr, newUserID, nil
 }
 
 func (prr *PullRequestRepo) PullRequestsByReviewer(ctx context.Context, userID domain.UserID) ([]domain.PullRequestShort, error) {

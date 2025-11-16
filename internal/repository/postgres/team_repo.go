@@ -62,7 +62,7 @@ func (tr *TeamRepo) Create(ctx context.Context, team domain.Team) error {
 
 func (tr *TeamRepo) TeamByName(ctx context.Context, teamName domain.TeamName) (domain.Team, error) {
 	teamQuery := `
-		SELECT t.team_name, u.user_id, u.user_name, u.is_active
+		SELECT t.team_name, u.user_id, u.username, u.is_active
 		FROM teams t
 		LEFT JOIN users u ON t.team_name = u.team_name
 		WHERE t.team_name = $1
