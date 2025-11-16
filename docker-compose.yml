@@ -4,9 +4,9 @@ services:
     container_name: pr_reviewer_db
 
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: pr_reviewer_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -31,8 +31,8 @@ services:
       - "8080:8080"
 
     environment:
-      PORT: "8080"
-      DATABASE_DSN: "postgres://user:password@db:5432/pr_reviewer_db?sslmode=disable"
+      PORT: ${PORT}
+      DATABASE_DSN: ${DATABASE_DSN}
     depends_on:
       db:
         condition: service_healthy
