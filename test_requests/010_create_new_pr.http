@@ -1,0 +1,8 @@
+POST http://localhost:8080/pullRequest/create
+Content-Type: application/json
+
+{
+"pull_request_id": "pr-102",
+"pull_request_name": "Some feature fix",
+"author_id": "u3"
+}

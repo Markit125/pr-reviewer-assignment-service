@@ -1,0 +1,1 @@
+GET http://localhost:8080/users/getReview?user_id=u2

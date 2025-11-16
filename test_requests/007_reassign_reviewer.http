@@ -1,0 +1,7 @@
+POST http://localhost:8080/pullRequest/reassign
+Content-Type: application/json
+
+{
+"pull_request_id": "pr-101",
+"old_user_id": "u2"
+}

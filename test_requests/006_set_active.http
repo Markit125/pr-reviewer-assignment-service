@@ -1,0 +1,7 @@
+POST http://localhost:8080/users/setIsActive
+Content-Type: application/json
+
+{
+"user_id": "u3",
+"is_active": true
+}
