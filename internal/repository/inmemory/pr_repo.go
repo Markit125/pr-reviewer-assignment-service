@@ -45,7 +45,7 @@ func (prr *PullRequestRepo) MergeByID(_ context.Context, pullRequestID domain.Pu
 
 	pr.Status = domain.StatusMerged
 
-	if pr.MergedAt != nil {
+	if pr.MergedAt == nil {
 		now := time.Now()
 		pr.MergedAt = &now
 	}
