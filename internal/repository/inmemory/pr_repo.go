@@ -65,9 +65,13 @@ func (prr *PullRequestRepo) ReassignReviewer(ctx context.Context, pullRequestID 
 		return domain.PullRequest{}, domain.UserID(""), domain.ErrNotFound
 	}
 
-	for i, reviewer := range pr.AssignedReviewers {
+	assignedReviewers := make([]domain.UserID, len(pr.AssignedReviewers))
+	copy(assignedReviewers, pr.AssignedReviewers)
+
+	for i, reviewer := range assignedReviewers {
 		if reviewer == oldUserID {
-			pr.AssignedReviewers[i] = newUserID
+			assignedReviewers[i] = newUserID
+			pr.AssignedReviewers = assignedReviewers
 			prr.db.PRs[pullRequestID] = pr
 			return pr, newUserID, nil
 		}
